@@ -1,0 +1,17 @@
+streamlit
+pypdf2
+faiss-cpu
+sentence-transformers
+numpy
+ollama
+langchain
+langchain-huggingface
+langchain-openai
+streamlit
+uvicorn
+langchain-core
+langchain-community
+fastapi
+dotenv
+transformers
+torch
