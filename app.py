@@ -7,7 +7,7 @@ import numpy as np
 # ---------------------------------
 # STREAMLIT UI
 # ---------------------------------
-st.set_page_config(page_title="Simple RAG Demo", layout="wide")
+st.set_page_config(page_title="AI Basics RAG", layout="wide")
 st.title("📘 AI Basics RAG (Fixed Content)")
 
 # ---------------------------------
@@ -115,7 +115,6 @@ AI is expected to enhance productivity across industries.
 Ongoing research focuses on making AI more transparent and ethical.
 """
 
-
 # ---------------------------------
 # LOAD MODELS
 # ---------------------------------
@@ -125,7 +124,7 @@ def load_models():
     llm = pipeline(
         "text2text-generation",
         model="google/flan-t5-base",
-        max_length=200
+        max_length=500  # allow longer answers
     )
     return embedder, llm
 
@@ -134,7 +133,8 @@ embedder, llm = load_models()
 # ---------------------------------
 # BUILD VECTOR STORE
 # ---------------------------------
-chunks = DOCUMENT.split(".")
+# Paragraph-based chunking
+chunks = [p.strip() for p in DOCUMENT.split("\n\n") if p.strip()]
 embeddings = embedder.encode(chunks)
 
 index = faiss.IndexFlatL2(embeddings.shape[1])
@@ -147,24 +147,23 @@ question = st.text_input("Ask a question")
 
 if question:
     q_emb = embedder.encode([question])
-    D, I = index.search(np.array(q_emb), k=2)
+    D, I = index.search(np.array(q_emb), k=5)  # top 5 relevant chunks
 
-    context = ". ".join([chunks[i] for i in I[0]])
+    context = "\n".join([chunks[i] for i in I[0]])
 
     prompt = f"""
-Answer ONLY from the context below.
+Answer the question ONLY using the context below.
 If the answer is not present, say:
 "Content not available in the provided document."
 
 Context:
 {context}
 
-Question:
-{question}
+Question: {question}
 
 Answer:
 """
 
     answer = llm(prompt)[0]["generated_text"]
     st.subheader("Answer")
-    st.write(answer)
+    st.text(answer)  # use text() to preserve line breaks
